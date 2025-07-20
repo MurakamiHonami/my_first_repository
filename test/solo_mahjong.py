@@ -4,7 +4,7 @@ tiles=[]
 tiles_type=""
 for n in range(4):
     for i in range(3):
-        tiles_type = ["萬", "筒", "索"][i]
+        tiles_type = ["m", "p", "s"][i]
         for j in range(1,10):
             if n==0 and j==5:
                 tiles.append(str(j)+tiles_type+"*")
@@ -19,29 +19,29 @@ for i in tehai:
     tiles.remove(i)
 
 ji19_tiles = ["東", "南", "西", "北", "白", "発", "中","1m","9m","1p","9p","1s","9s"]
-ji_tile=["東", "南", "西", "北", "白", "発", "中"]
+ji_tiles=["東", "南", "西", "北", "白", "発", "中"]
 remove_tiles=[]
 
 def tile_sort(tile):
     sort_tehai=[]
     num=[]
     for pai in tile:
-        if "萬" in pai:
+        if len(pai)==2 and "m" == pai[1]:
             num.append(pai)
     sort_tehai+=sorted(num)
     num=[]
     for pai in tile:
-        if "筒" in pai:
+        if len(pai)==2 and "p" == pai[1]:
             num.append(pai)
     sort_tehai+=sorted(num)
     num=[]
     for pai in tile:
-        if "索" in pai:
+        if len(pai)==2 and "s" == pai[1]:
             num.append(pai)
     sort_tehai+=sorted(num)
     num=[]
     for pai in tile:
-        if pai in ji19_tiles:
+        if pai in ji_tiles:
            num.append(pai)
     sort_tehai+=sorted(num)
     return sort_tehai
@@ -53,26 +53,24 @@ def tsumo(tile):
     return tumo
 
 
-def shuntsu_cnt(tehai):
+def shuntsu_cnt(tehai2):
     suits = ['m', 'p', 's']
     shuntsu =0
-    tehai2=tehai
-    
-
+    tehai_copy=tehai2
     for suit in suits:
-        suit_tiles = sorted([tile for tile in tehai2 if len(tile) >= 2 and tile[1] == suit])
-        numbers = [int(tile[0]) for tile in tehai2 if len(tile) == 2 and tile[1] == suit]
+        suit_tiles = sorted([tile for tile in tehai_copy if len(tile) >= 2 and tile[1] == suit])
+        numbers = [int(tile[0]) for tile in tehai_copy if len(tile) == 2 and tile[1] == suit]
         i=0
         while i<len(numbers)-2:
-            if numbers[i+1]==numbers[i]+1 and numbers[i+2]==numbers[i]+2:
-                t1, t2, t3 = f'{numbers[i]}{suit}', f'{numbers[i+1]}{suit}', f'{numbers[i+2]}{suit}'
+            if numbers[i]+1 in numbers and numbers[i]+2 in numbers:
+                t1, t2, t3 = f'{numbers[i]}{suit}', f'{numbers[i]+1}{suit}', f'{numbers[i]+2}{suit}'
 
-                tehai2.remove(t1)
-                tehai2.remove(t2)
-                tehai2.remove(t3)
+                tehai_copy.remove(t1)
+                tehai_copy.remove(t2)
+                tehai_copy.remove(t3)
                 shuntsu += 1
-                suit_tiles = sorted([tile for tile in tehai2 if len(tile) >= 2 and tile[1] == suit])
-                numbers = [int(tile[0]) for tile in tehai2 if len(tile) == 2 and tile[1] == suit]
+                suit_tiles = sorted([tile for tile in tehai_copy if len(tile) >= 2 and tile[1] == suit])
+                numbers = [int(tile[0]) for tile in tehai_copy if len(tile) == 2 and tile[1] == suit]
                 i = 0
             else:
                 i+=1
@@ -104,9 +102,12 @@ def toitsu_cnt(tehai):
             j+=1
     return toi,tehai
 def hora(hand):
-    shuntsu,tehai = shuntsu_cnt(hand[:])
-    kotsu,tehai2=kotsu_cnt(tehai[:])
-    toi,tehai3=toitsu_cnt(tehai2[:])
+    shuntsu,tehai2 = shuntsu_cnt(hand[:])
+    # print(shuntsu,tehai2)
+    kotsu,tehai2=kotsu_cnt(tehai2[:])
+    # print(kotsu,tehai2)
+    toi,tehai2=toitsu_cnt(tehai2[:])
+    # print(toi,tehai2)
     if shuntsu+kotsu==4 and toi==1:
         return True
     else:
@@ -140,51 +141,83 @@ def is_honro(tehai):
 
 def is_chinitsu(tehai):
     suits = ['m', 'p', 's']
-    for ji in ji_tile:
-                if ji in tehai:
-                    return False
-    suits=[]
+    for ji in ji_tiles:
+        for tile in tehai:
+            if ji==tile:
+                return False
+    for suit in suits:
+        cnt=0
+        for tile in tehai:
+            if tile[1] == suit:
+                cnt+=1
+        if cnt==len(tehai):
+            return True
+    return False
+
+def is_honitsu(tehai):
+    cnt=0
+    remove=[]
+    i=0
     for tile in tehai:
-        if tile[1] in suits:
-            suits.append(tile[1])
-        else:
-            return False
-    return len(suits)==1
+        for ji in ji_tiles:
+            if ji==tile:
+                cnt+=1
+                remove.append(ji)
+        i+=1
+    if cnt==0:
+        return False
+    for r in remove:
+       tehai.remove(r)
+    suits = ['m', 'p', 's']
+    for suit in suits:
+        cnt=0
+        for tile in tehai:
+            if tile[1]==suit:
+                cnt+=1
+        if len(tehai)==cnt:
+            return True
+    return False
 
 def is_ittsu(tehai):
     suits = ['m', 'p', 's']
     for suit in suits:
-        numbers=[int(tile[0]) for tile in tehai if tile[1]==suit]
         cnt=0
-        if len(numbers)==9:
-            for i in range(1,10):
-                if f"{i}{suit}" in tehai:
-                    cnt+=1
-            if cnt==9:
-                return True
+        for i in range(1,10):
+            if f"{i}{suit}" in tehai:
+                cnt+=1
+        if cnt==9:
+            return True
     return False
 
-def is_honitsu(tehai):
-    for tile in ji_tile:
-        if tile in tehai:
-            tehai.remove(tile)
-    suits = ['m', 'p', 's']
-    for suit in suits:
-        if all(len(tile)==2 and tile[1] == suit for tile in tehai):
-                return True
+def is_sanshoku(tehai):
+    suits=['m','p','s']
+    for i in range(1,8):
+            if f"{i}{suits[0]}" in tehai and f"{i+1}{suits[0]}" in tehai and f"{i+2}{suits[0]}" in tehai:
+                if f"{i}{suits[1]}" in tehai and f"{i+1}{suits[1]}" in tehai and f"{i+2}{suits[1]}" in tehai:
+                    if f"{i}{suits[2]}" in tehai and f"{i+1}{suits[2]}" in tehai and f"{i+2}{suits[2]}" in tehai:
+                        return True
     return False
 
 def yaku_judge(tehai):
         if is_chinitsu(tehai[:]):
             print("清一色")
-        elif is_honro(tehai[:]):
-            print("混老頭")
         if is_honitsu(tehai[:]):
             print("混一色")
+        if is_honro(tehai[:]):
+            print("混老頭")
         if is_ittsu(tehai[:]):
             print("一気通貫")
+        if is_sanshoku(tehai[:]):
+            print("三色同順")
         if is_tanyao(tehai[:]):
             print("タンヤオ")
+
+hand = ["1p","2p","3p","1m","東","東","2m","3m","1s","2s","3s","8p","8p","8p"]
+hand = tile_sort(hand)
+print(hand)
+if hora(hand[:]) or rare_yaku_judge(hand[:]):
+    yaku_judge(hand[:])
+    print("和了")
 
 wanpai=random.sample(tiles, 14)
 for i in wanpai:
